@@ -82,6 +82,20 @@ async function fetchVideos(ids: string[]): Promise<FetchedVideo[]> {
     .map((v, i) => ({ ...v, position: i }));
 }
 
+/**
+ * A video's description as the uploader wrote it ("" when it has none).
+ * Fetched when a lesson is opened rather than saved with the course, so courses
+ * added earlier get descriptions too and saved data stays small. Costs 1 quota unit.
+ */
+export async function fetchDescription(id: string): Promise<string> {
+  const data = await yt<{ items: { snippet: { description?: string } }[] }>("videos", {
+    part: "snippet",
+    id,
+  });
+  if (data.items.length === 0) throw new UserError("That video could not be found.", 404);
+  return data.items[0].snippet.description?.trim() ?? "";
+}
+
 /** YouTube's category id for "Education". Uploaders pick a video's category themselves. */
 const EDUCATION_CATEGORY = "27";
 /** YouTube's "Knowledge" topic, which YouTube assigns from the video's content. */

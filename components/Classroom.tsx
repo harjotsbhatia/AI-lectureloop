@@ -7,6 +7,7 @@ import { courseProgress, NO_DONE, useMounted, useStore } from "@/lib/store";
 import type { Course, Video } from "@/lib/types";
 import { formatDuration } from "@/lib/url";
 import { Logo, PageMessage } from "./Chrome";
+import Description from "./Description";
 import NotesPanel from "./NotesPanel";
 import Player, { type PlayerHandle } from "./Player";
 import QuizPanel from "./QuizPanel";
@@ -182,6 +183,7 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
               </Link>
             )}
           </nav>
+          <Description videoId={video.id} durationSec={video.durationSec} onSeek={seek} />
         </section>
 
         <aside
