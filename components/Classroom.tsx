@@ -26,6 +26,8 @@ const TABS = [
 type Tab = (typeof TABS)[number][0];
 
 // Every speed YouTube's embedded player accepts; it has nothing above 2×.
+const SKIP_SEC = 10;
+
 const RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
 export default function Classroom() {
@@ -66,6 +68,23 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
   }, [course.id, video.id, setLastVideo]);
 
   const seek = useCallback((sec: number) => player.current?.seekTo(sec), []);
+  const skip = useCallback((sec: number) => player.current?.skipBy(sec), []);
+
+  // ← / → (or J / L, as on YouTube) jump 10 seconds, except while typing in a field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el?.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return;
+      const key = e.key.toLowerCase();
+      const delta = key === "arrowleft" || key === "j" ? -SKIP_SEC : key === "arrowright" || key === "l" ? SKIP_SEC : 0;
+      if (!delta) return;
+      e.preventDefault();
+      skip(delta);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [skip]);
   const getTime = useCallback(() => player.current?.getCurrentTime() ?? 0, []);
 
   const onProgress = useCallback(
@@ -172,7 +191,7 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
               {isDone ? "✓ Done" : "Mark as done"}
             </button>
           </div>
-          <nav className="mt-4 flex justify-between gap-3" aria-label="Lessons">
+          <nav className="mt-4 flex flex-wrap items-center justify-between gap-3" aria-label="Lessons">
             {prev ? (
               <Link href={`/course/${course.id}/watch/${prev.id}`} className="btn">
                 ← Previous
@@ -180,10 +199,33 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
             ) : (
               <span />
             )}
-            {next && (
+            {/* On phones the skip buttons get their own row above Previous / Next. */}
+            <div className="order-first flex w-full justify-center gap-2 sm:order-none sm:w-auto">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => skip(-SKIP_SEC)}
+                aria-label="Back 10 seconds"
+                title="Back 10 seconds (← or J)"
+              >
+                ↺ 10s
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => skip(SKIP_SEC)}
+                aria-label="Forward 10 seconds"
+                title="Forward 10 seconds (→ or L)"
+              >
+                10s ↻
+              </button>
+            </div>
+            {next ? (
               <Link href={`/course/${course.id}/watch/${next.id}`} className="btn">
                 Next lesson →
               </Link>
+            ) : (
+              <span />
             )}
           </nav>
           <Description videoId={video.id} durationSec={video.durationSec} onSeek={seek} />

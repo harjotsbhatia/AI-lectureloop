@@ -54,6 +54,8 @@ function loadApi(): Promise<YTNamespace> {
 
 export interface PlayerHandle {
   seekTo(sec: number): void;
+  /** Jumps forward (positive) or back (negative) without changing whether the video plays. */
+  skipBy(sec: number): void;
   getCurrentTime(): number;
   setRate(rate: number): void;
   /** Fills the screen with the player, or leaves full screen if it is already on. */
@@ -89,6 +91,7 @@ export default function Player({
 }) {
   const holder = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const lastSkip = useRef<{ target: number; at: number } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   // YouTube's player state: 1 is playing, 3 is buffering.
   const state = useRef(-1);
@@ -128,6 +131,19 @@ export default function Player({
         if (!ready.current) return;
         player.current?.seekTo(sec, true);
         player.current?.playVideo();
+      },
+      skipBy(delta) {
+        const p = player.current;
+        if (!ready.current || !p) return;
+        const dur = p.getDuration();
+        // Right after a seek YouTube still reports the old time, so quick repeated
+        // presses build on the last target instead: three presses jump 30 seconds.
+        const recent = lastSkip.current && Date.now() - lastSkip.current.at < 1000;
+        const from = recent ? lastSkip.current!.target : p.getCurrentTime();
+        // Stop just short of the end so a skip near the finish doesn't end the video.
+        const target = Math.max(0, dur > 0 ? Math.min(from + delta, dur - 1) : from + delta);
+        lastSkip.current = { target, at: Date.now() };
+        p.seekTo(target, true);
       },
       getCurrentTime() {
         return ready.current ? (player.current?.getCurrentTime() ?? 0) : 0;
@@ -183,6 +199,11 @@ export default function Player({
             state.current = e.data;
             if (e.data === 1) {
               setStarted(true);
+              // Starting with YouTube's own play button leaves keyboard focus inside its
+              // player, where the page's ← / → shortcuts can't hear keys. Take it back.
+              if (document.activeElement?.tagName === "IFRAME") {
+                frame.current?.focus({ preventScroll: true });
+              }
               setControlsWanted(false);
             }
             setPaused(e.data === 2);
@@ -206,7 +227,8 @@ export default function Player({
   return (
     <div
       ref={frame}
-      className={`flex w-full justify-center overflow-hidden bg-black ${
+      tabIndex={-1}
+      className={`flex w-full outline-none justify-center overflow-hidden bg-black ${
         fullscreen ? BAND_FULLSCREEN : `${BAND} rounded-xl`
       }`}
     >
