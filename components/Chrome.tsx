@@ -1,16 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export function Logo() {
+/** `compact` shows only the icon on phones, for top bars that need the room. */
+export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+    <Link
+      href="/"
+      aria-label="LectureLoop home"
+      className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
+    >
       <span
         aria-hidden
         className="grid size-7 place-items-center rounded-lg bg-accent text-sm text-accent-fg"
       >
         ↻
       </span>
-      LectureLoop
+      <span className={compact ? "hidden sm:inline" : undefined}>LectureLoop</span>
     </Link>
   );
 }

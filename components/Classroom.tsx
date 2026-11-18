@@ -8,6 +8,7 @@ import type { Course, Video } from "@/lib/types";
 import { formatDuration } from "@/lib/url";
 import { Logo, PageMessage } from "./Chrome";
 import Description from "./Description";
+import StudyTimer from "./StudyTimer";
 import NotesPanel from "./NotesPanel";
 import Player, { type PlayerHandle } from "./Player";
 import QuizPanel from "./QuizPanel";
@@ -89,7 +90,7 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
     <>
       <header className="sticky top-0 z-10 border-b border-line bg-bg/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-4">
-          <Logo />
+          <Logo compact />
           {/* The link is only as wide as its text, so the empty bar beside it is not clickable. */}
           <div className="hidden min-w-0 flex-1 sm:flex">
             <Link
@@ -99,8 +100,9 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
               ← {course.title}
             </Link>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden text-sm text-muted md:inline">{p.percent}% done</span>
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+            <StudyTimer />
+            <span className="hidden text-sm text-muted xl:inline">{p.percent}% done</span>
             <label className="flex items-center gap-1.5 text-sm text-muted">
               <span className="sr-only sm:not-sr-only">Speed</span>
               <select
@@ -119,16 +121,17 @@ function Lesson({ course, video }: { course: Course; video: Video }) {
                 ))}
               </select>
             </label>
+            {/* On phones these two don't fit beside the timer; double-tap the video for full screen. */}
             <button
               type="button"
-              className="btn"
+              className="btn hidden sm:inline-flex"
               onClick={() => player.current?.toggleFullscreen()}
             >
               Full screen
             </button>
             <button
               type="button"
-              className={`btn ${focus ? "btn-primary" : ""}`}
+              className={`btn hidden sm:inline-flex ${focus ? "btn-primary" : ""}`}
               aria-pressed={focus}
               onClick={() => setFocus((f) => !f)}
             >
