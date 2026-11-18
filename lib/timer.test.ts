@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   FRESH_TIMER,
   formatClock,
+  formatMinutes,
   pauseTimer,
   readTimer,
   restartTimer,
@@ -44,5 +45,12 @@ describe("study timer", () => {
     expect(formatClock(1500)).toBe("0:00:01");
     expect(formatClock(SESSION_MS - 1500, true)).toBe("2:59:59");
     expect(formatClock(SESSION_MS, true)).toBe("3:00:00");
+  });
+
+  it("shows time left as total minutes and seconds", () => {
+    expect(formatMinutes(SESSION_MS)).toBe("180:00");
+    expect(formatMinutes(117.5 * MIN)).toBe("117:30");
+    expect(formatMinutes(59_500)).toBe("1:00");
+    expect(formatMinutes(5_000)).toBe("0:05");
   });
 });

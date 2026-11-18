@@ -50,3 +50,9 @@ export function formatClock(ms: number, roundUp = false): string {
   const sec = s % 60;
   return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
+
+/** Milliseconds left → total minutes and seconds, e.g. "117:30". Rounds up, like formatClock. */
+export function formatMinutes(ms: number): string {
+  const s = Math.ceil(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}

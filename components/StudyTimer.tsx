@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   formatClock,
+  formatMinutes,
   FRESH_TIMER,
   pauseTimer,
   readTimer,
@@ -47,19 +48,18 @@ export default function StudyTimer() {
   const t = readTimer(state, startedAt === null ? 0 : now);
   const left = formatClock(t.remaining, true);
   const done = formatClock(t.elapsed);
-  // Whole minutes left, rounded up: 180 at the start, 1 in the final minute.
-  const minsLeft = Math.ceil(t.remaining / 60_000);
+  // Time left as total minutes and seconds, e.g. 117:30 (180:00 at the start).
+  const minsLeft = formatMinutes(t.remaining);
 
   return (
     <div
       className="flex items-center gap-1 rounded-lg border border-line bg-surface py-0.5 pr-0.5 pl-2.5"
       role="timer"
-      aria-label={`Study timer: ${minsLeft} min left, ${left} left, ${done} done${t.running ? "" : ", paused"}`}
+      aria-label={`Study timer: ${minsLeft} minutes left, ${left} left, ${done} done${t.running ? "" : ", paused"}`}
     >
       <div className="flex items-baseline gap-2 font-mono text-sm tabular-nums">
-        <span title="Minutes left in this 3-hour session">
+        <span title="Minutes and seconds left in this 3-hour session">
           <span className="font-semibold text-ink">{minsLeft}</span>
-          <span className="ml-1 font-sans text-xs text-muted">min</span>
         </span>
         {/* On phones the minutes stand in for the exact time left, to save room. */}
         <span className="hidden text-line sm:inline" aria-hidden>
